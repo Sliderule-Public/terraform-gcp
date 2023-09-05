@@ -1,10 +1,10 @@
 resource "google_compute_global_address" "web" {
-  name    = "sliderule-web"
+  name    = "shieldrule-web"
   project = var.project_id
 }
 
 resource "google_compute_global_address" "api" {
-  name    = "sliderule-api"
+  name    = "shieldrule-api"
   project = var.project_id
 }
 
@@ -104,7 +104,7 @@ resource "helm_release" "sliderule_base" {
   name       = "sliderule-base"
   repository = var.helm_chart_repository
   chart      = "sliderule-base"
-  version    = "0.7.0"
+  version    = "0.8.3"
   namespace  = local.sliderule_namespace
   wait       = false
 
@@ -144,6 +144,81 @@ resource "helm_release" "sliderule_base" {
   set {
     name  = "web.secrets[0]"
     value = "sliderule-web-secret"
+  }
+
+  set {
+    name  = "api.file_mounts[0].name"
+    value = "root-cert"
+  }
+
+  set {
+    name  = "api.file_mounts[0].config_map_name"
+    value = "gcp-db-cert-info"
+  }
+
+  set {
+    name  = "api.file_mounts[0].mount_path"
+    value = "/opt/shieldrule-api/certs"
+  }
+
+  set {
+    name  = "api.file_mounts[0].file_name"
+    value = "server-ca.pem"
+  }
+
+  set {
+    name  = "api.file_mounts[1].name"
+    value = "client-cert"
+  }
+
+  set {
+    name  = "api.file_mounts[1].config_map_name"
+    value = "gcp-db-cert-info"
+  }
+
+  set {
+    name  = "api.file_mounts[1].mount_path"
+    value = "/opt/shieldrule-api/certs"
+  }
+
+  set {
+    name  = "api.file_mounts[1].file_name"
+    value = "client-cert.pem"
+  }
+
+  set {
+    name  = "api.file_mounts[2].name"
+    value = "client-key"
+  }
+
+  set {
+    name  = "api.file_mounts[2].config_map_name"
+    value = "gcp-db-cert-info"
+  }
+
+  set {
+    name  = "api.file_mounts[2].mount_path"
+    value = "/opt/shieldrule-api/certs"
+  }
+
+  set {
+    name  = "api.file_mounts[2].file_name"
+    value = "client-key.pk8"
+  }
+
+  set {
+    name  = "api.env_vars.READ_WRITE_SSL_ROOT_CERT"
+    value = "certs/server-ca.pem/server-ca.pem"
+  }
+
+  set {
+    name  = "api.env_vars.READ_WRITE_SSL_CLIENT_CERT"
+    value = "certs/client-cert.pem/client-cert.pem"
+  }
+
+  set {
+    name  = "api.env_vars.READ_WRITE_SSL_CLIENT_KEY"
+    value = "certs/client-key.pk8/client-key.pk8"
   }
 }
 
@@ -192,8 +267,6 @@ resource "kubernetes_secret" "sliderule" {
   }
 
   data = {
-    DB_CERT                = module.database.certificate
-    DB_PRIVATE_KEY         = module.database.private_key
     PUB_SUB_TOPIC_ID       = module.main_pub_sub_topic.topic_id
     POSTGRES_DB            = "${local.app_name}-${var.environment}-main"
     POSTGRES_HOST          = module.database.private_ip_address
@@ -222,5 +295,18 @@ resource "kubernetes_namespace" "sliderule_prerequisites" {
     }
 
     name = local.prerequisite_namespace
+  }
+}
+
+resource "kubernetes_config_map" "gcp_db_cert" {
+  metadata {
+    name      = "gcp-db-cert-info"
+    namespace = local.sliderule_namespace
+  }
+
+  data = {
+    "root-cert"   = module.database.root_cert
+    "client-key"  = module.database.client_key
+    "client-cert" = module.database.client_cert
   }
 }
