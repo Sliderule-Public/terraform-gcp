@@ -208,17 +208,17 @@ resource "helm_release" "sliderule_base" {
 
   set {
     name  = "api.env_vars.READ_WRITE_SSL_ROOT_CERT"
-    value = "certs/server-ca.pem/server-ca.pem"
+    value = "/opt/shieldrule-api/certs/server-ca.pem/server-ca.pem"
   }
 
   set {
     name  = "api.env_vars.READ_WRITE_SSL_CLIENT_CERT"
-    value = "certs/client-cert.pem/client-cert.pem"
+    value = "/opt/shieldrule-api/certs/client-cert.pem/client-cert.pem"
   }
 
   set {
     name  = "api.env_vars.READ_WRITE_SSL_CLIENT_KEY"
-    value = "certs/client-key.pk8/client-key.pk8"
+    value = "/opt/shieldrule-api/certs/client-key.pk8/client-key.pk8"
   }
 }
 
@@ -275,6 +275,8 @@ resource "kubernetes_secret" "sliderule" {
     SHIELDRULE_ENVIRONMENT = var.environment
     SHIELDRULE_ENVIRONMENT = var.environment
     METRICS_NAMESPACE      = var.environment
+    REDIS_HOST             = google_redis_instance.main.host
+    REDIS_PORT             = 6379
   }
 }
 
