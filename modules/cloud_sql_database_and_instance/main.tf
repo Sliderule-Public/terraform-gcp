@@ -21,6 +21,15 @@ resource "google_sql_database_instance" "instance" {
       ipv4_enabled    = true
       private_network = var.network_id
       require_ssl     = true
+      authorized_networks {
+        name  = "vpn"
+        value = "50.18.13.74/32"
+      }
+
+      authorized_networks {
+        name  = "matt"
+        value = "96.8.253.207/32"
+      }
     }
   }
 
@@ -68,4 +77,24 @@ resource "google_sql_ssl_cert" "client_cert" {
   instance    = google_sql_database_instance.instance.name
   project     = var.project_id
 }
+
+#resource "google_compute_global_address" "public_ip_address" {
+#  provider = google-beta
+#
+#  name          = "private-ip-address"
+#  purpose       = "VPC_PEERING"
+#  address_type  = "EXTERNAL"
+#  prefix_length = 16
+#  project       = var.project_id
+#  network       = var.network_id
+#}
+#
+#// TODO this will take some kind of input from Cloud Run
+#resource "google_service_networking_connection" "public_vpc_connection" {
+#  provider = google-beta
+#
+#  network                 = var.network_id
+#  service                 = "servicenetworking.googleapis.com"
+#  reserved_peering_ranges = [google_compute_global_address.public_ip_address.name]
+#}
 

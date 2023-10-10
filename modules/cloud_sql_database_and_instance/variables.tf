@@ -24,3 +24,8 @@ variable "db_version" {
 variable "network_id" {
   type = string
 }
+variable "cert_dir" {
+  description = "The directory to contain GCP DB certificates"
+  type        = string
+  default     = ".ignore"
+}

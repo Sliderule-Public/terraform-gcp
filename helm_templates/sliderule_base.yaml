@@ -1,0 +1,34 @@
+service_account_name: "${api_service_account_name}"
+gcp_service_account: "${gcp_service_account}"
+enable_prometheus: ${enable_prometheus}
+api_image_url: "${api_image_url}"
+web_image_url: "${web_image_url}"
+SHIELDRULE_ENVIRONMENT: "${SHIELDRULE_ENVIRONMENT}"
+
+api:
+  secrets:
+    - sliderule-secret
+    - terraform-secret
+  file_mounts:
+    - name: "root-cert"
+      config_map_name: "gcp-db-cert-info"
+      mount_path: "/opt/shieldrule-api/certs"
+      file_name: "server-ca.pem"
+    - name: "client-cert"
+      config_map_name: "gcp-db-cert-info"
+      mount_path: "/opt/shieldrule-api/certs"
+      file_name: "client-cert.pem"
+    - name: "client-key"
+      config_map_name: "gcp-db-cert-info"
+      mount_path: "/opt/shieldrule-api/certs"
+      file_name: "client-key.pk8"
+  env_vars:
+    READ_WRITE_SSL_ROOT_CERT: "/opt/shieldrule-api/certs/server-ca.pem/server-ca.pem"
+    READ_WRITE_SSL_CLIENT_CERT: "/opt/shieldrule-api/certs/client-cert.pem/client-cert.pem"
+    READ_WRITE_SSL_CLIENT_KEY: "/opt/shieldrule-api/certs/client-key.pk8/client-key.pk8"
+
+web:
+  secrets:
+    - sliderule-web-secret
+    - terraform-secret
+
