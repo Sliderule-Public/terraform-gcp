@@ -53,3 +53,9 @@ variable "enable_prometheus" {
   type        = bool
   default     = false
 }
+
+variable "cert_dir" {
+  description = "The directory to contain GCP DB certificates"
+  type        = string
+  default     = ".ignore"
+}

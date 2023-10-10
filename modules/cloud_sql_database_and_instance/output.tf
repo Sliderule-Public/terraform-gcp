@@ -7,7 +7,8 @@ output "client_cert" {
 }
 
 output "client_key" {
-  value = filebase64("${local.key_dir}/key.der")
+  #  value = filebase64("${local.key_dir}/key.der")
+  value = data.local_file.key_pk8.content_base64
 }
 
 output "root_cert" {

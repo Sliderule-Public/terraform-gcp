@@ -104,122 +104,20 @@ resource "helm_release" "sliderule_base" {
   name       = "sliderule-base"
   repository = var.helm_chart_repository
   chart      = "sliderule-base"
-  version    = "0.8.3"
+  version    = "0.8.15"
   namespace  = local.sliderule_namespace
   wait       = false
 
-  set {
-    name  = "enable_prometheus"
-    value = "false"
-  }
-
-  set {
-    name  = "api_image_url"
-    value = var.api_image_url
-  }
-
-  set {
-    name  = "web_image_url"
-    value = var.web_image_url
-  }
-
-  set {
-    name  = "SHIELDRULE_ENVIRONMENT"
-    value = var.environment
-  }
-
-  # Injects values from terraform into API
-  set {
-    name  = "api.secrets[0]"
-    value = "terraform-secret"
-  }
-
-  # Sets up the API to read from the `sliderule-secret` secret
-  set {
-    name  = "api.secrets[1]"
-    value = "sliderule-secret"
-  }
-
-  # Sets up the front end to read from the `sliderule-web-secret` secret
-  set {
-    name  = "web.secrets[0]"
-    value = "sliderule-web-secret"
-  }
-
-  set {
-    name  = "api.file_mounts[0].name"
-    value = "root-cert"
-  }
-
-  set {
-    name  = "api.file_mounts[0].config_map_name"
-    value = "gcp-db-cert-info"
-  }
-
-  set {
-    name  = "api.file_mounts[0].mount_path"
-    value = "/opt/shieldrule-api/certs"
-  }
-
-  set {
-    name  = "api.file_mounts[0].file_name"
-    value = "server-ca.pem"
-  }
-
-  set {
-    name  = "api.file_mounts[1].name"
-    value = "client-cert"
-  }
-
-  set {
-    name  = "api.file_mounts[1].config_map_name"
-    value = "gcp-db-cert-info"
-  }
-
-  set {
-    name  = "api.file_mounts[1].mount_path"
-    value = "/opt/shieldrule-api/certs"
-  }
-
-  set {
-    name  = "api.file_mounts[1].file_name"
-    value = "client-cert.pem"
-  }
-
-  set {
-    name  = "api.file_mounts[2].name"
-    value = "client-key"
-  }
-
-  set {
-    name  = "api.file_mounts[2].config_map_name"
-    value = "gcp-db-cert-info"
-  }
-
-  set {
-    name  = "api.file_mounts[2].mount_path"
-    value = "/opt/shieldrule-api/certs"
-  }
-
-  set {
-    name  = "api.file_mounts[2].file_name"
-    value = "client-key.pk8"
-  }
-
-  set {
-    name  = "api.env_vars.READ_WRITE_SSL_ROOT_CERT"
-    value = "/opt/shieldrule-api/certs/server-ca.pem/server-ca.pem"
-  }
-
-  set {
-    name  = "api.env_vars.READ_WRITE_SSL_CLIENT_CERT"
-    value = "/opt/shieldrule-api/certs/client-cert.pem/client-cert.pem"
-  }
-
-  set {
-    name  = "api.env_vars.READ_WRITE_SSL_CLIENT_KEY"
-    value = "/opt/shieldrule-api/certs/client-key.pk8/client-key.pk8"
-  }
+  values = [
+    templatefile("${path.module}/helm_templates/sliderule_base.yaml", {
+      api_service_account_name : local.service_account_name
+      gcp_service_account : local.service_account_email
+      enable_prometheus : var.enable_prometheus
+      api_image_url : var.api_image_url
+      web_image_url : var.web_image_url
+      SHIELDRULE_ENVIRONMENT : var.environment
+    })
+  ]
 }
 
 resource "null_resource" "allow_base_to_deploy" {
@@ -239,7 +137,7 @@ resource "helm_release" "sliderule" {
   name       = "sliderule-gcp"
   repository = var.helm_chart_repository
   chart      = "sliderule-gcp"
-  version    = "0.5.1"
+  version    = "0.5.3"
   namespace  = local.sliderule_namespace
   wait       = false
 
@@ -267,16 +165,20 @@ resource "kubernetes_secret" "sliderule" {
   }
 
   data = {
-    PUB_SUB_TOPIC_ID       = module.main_pub_sub_topic.topic_id
-    POSTGRES_DB            = "${local.app_name}-${var.environment}-main"
-    POSTGRES_HOST          = module.database.private_ip_address
-    POSTGRES_PORT          = 5432
-    SHIELDRULE_ENVIRONMENT = var.environment
-    SHIELDRULE_ENVIRONMENT = var.environment
-    SHIELDRULE_ENVIRONMENT = var.environment
-    METRICS_NAMESPACE      = var.environment
-    REDIS_HOST             = google_redis_instance.main.host
-    REDIS_PORT             = 6379
+    PUB_SUB_TOPIC_ID               = module.main_pub_sub_topic.topic_id
+    POSTGRES_DB                    = "${local.app_name}-${var.environment}-main"
+    POSTGRES_HOST                  = module.database.private_ip_address
+    POSTGRES_PORT                  = 5432
+    SHIELDRULE_ENVIRONMENT         = var.environment
+    SHIELDRULE_ENVIRONMENT         = var.environment
+    SHIELDRULE_ENVIRONMENT         = var.environment
+    METRICS_NAMESPACE              = var.environment
+    REDIS_HOST                     = google_redis_instance.main.host
+    REDIS_PORT                     = 6379
+    GCP_BUCKET_NAME                = module.application_storage_bucket.bucket_name
+    GCP_PROJECT_ID                 = var.project_id
+    GCP_PERSIST_QUEUE_TOPIC        = module.main_pub_sub_topic.topic_name
+    GCP_PERSIST_QUEUE_SUBSCRIPTION = module.main_pub_sub_topic.subscription_name
   }
 }
 
@@ -308,7 +210,10 @@ resource "kubernetes_config_map" "gcp_db_cert" {
 
   data = {
     "root-cert"   = module.database.root_cert
-    "client-key"  = module.database.client_key
     "client-cert" = module.database.client_cert
+  }
+
+  binary_data = {
+    "client-key" = module.database.client_key
   }
 }

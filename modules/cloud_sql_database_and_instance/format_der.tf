@@ -2,7 +2,7 @@
 # Converts the pem to the der format needed by the JVM
 
 locals {
-  key_dir = "/tmp"
+  key_dir = var.cert_dir
 }
 
 resource "local_file" "key_pem" {
