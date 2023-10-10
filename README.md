@@ -4,10 +4,9 @@
 - create GCP project
 - Enable the services in the `Services to Enable` section below if needed
 - create terraform service account for project, add credentials to terraform provider
-- create a `sliderule-<environment> namespace in kubernetes`
 - apply Terraform
-- create `sliderule-secret` secret in the K8S namespace with the API values from the [Sliderule Base helm chart](https://github.com/Sliderule-Public/helm-charts/tree/main/charts/sliderule-base)
-- create `sliderule-web-secret` secret in the K8S namespace with the Web values from the [Sliderule Base helm chart](https://github.com/Sliderule-Public/helm-charts/tree/main/charts/sliderule-base)
+- create `sliderule_secret` secret in the GCP project with the API values from the [Sliderule Base helm chart](https://github.com/Sliderule-Public/helm-charts/tree/main/charts/sliderule-base)
+- create `sliderule_web_secret` secret in the GCP project with the Web values from the [Sliderule Base helm chart](https://github.com/Sliderule-Public/helm-charts/tree/main/charts/sliderule-base)
 
 ## Services to Enable
 - servicemanagement.googleapis.com
