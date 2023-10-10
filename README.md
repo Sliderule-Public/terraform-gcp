@@ -4,9 +4,9 @@
 - create GCP project
 - Enable the services in the `Services to Enable` section below if needed
 - create terraform service account for project, add credentials to terraform provider
-- apply Terraform
 - create `sliderule_secret` secret in the GCP project with the API values from the [Sliderule Base helm chart](https://github.com/Sliderule-Public/helm-charts/tree/main/charts/sliderule-base)
 - create `sliderule_web_secret` secret in the GCP project with the Web values from the [Sliderule Base helm chart](https://github.com/Sliderule-Public/helm-charts/tree/main/charts/sliderule-base)
+- apply Terraform
 
 ## Services to Enable
 - servicemanagement.googleapis.com
