@@ -27,6 +27,10 @@ resource "google_cloud_run_service" "main" {
       }
     }
   }
+  //
+  //  metadata {
+  //    name = local.app_name
+  //  }
 
   traffic {
     percent         = 100

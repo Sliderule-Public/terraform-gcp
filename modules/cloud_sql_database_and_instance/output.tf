@@ -7,7 +7,7 @@ output "client_cert" {
 }
 
 output "client_key" {
-  value = google_sql_ssl_cert.client_cert.private_key
+  value = filebase64("${local.key_dir}/key.der")
 }
 
 output "root_cert" {

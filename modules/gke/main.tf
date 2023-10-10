@@ -2,6 +2,11 @@ locals {
   name_prefix = "${var.app_name}-${var.environment}"
 }
 
+//resource "google_service_account" "default" {
+//  account_id   = local.name_prefix
+//  display_name = local.name_prefix
+//}
+
 resource "google_container_cluster" "primary" {
   name            = "${local.name_prefix}-cluster"
   location        = var.location
