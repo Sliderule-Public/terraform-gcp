@@ -4,4 +4,5 @@ module "application_storage_bucket" {
   environment = var.environment
   project_id  = var.project_id
   bucket_name = "sliderule_storage"
+  web_url     = var.web_url
 }

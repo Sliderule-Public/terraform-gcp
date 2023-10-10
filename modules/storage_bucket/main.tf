@@ -7,4 +7,10 @@ resource "google_storage_bucket" "bucket" {
   uniform_bucket_level_access = var.uniform_bucket_level_access
   location                    = "US"
   project                     = var.project_id
+  cors {
+    origin          = ["http://${var.web_url}"]
+    method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
 }
