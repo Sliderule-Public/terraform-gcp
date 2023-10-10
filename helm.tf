@@ -170,8 +170,6 @@ resource "kubernetes_secret" "sliderule" {
     POSTGRES_HOST                  = module.database.private_ip_address
     POSTGRES_PORT                  = 5432
     SHIELDRULE_ENVIRONMENT         = var.environment
-    SHIELDRULE_ENVIRONMENT         = var.environment
-    SHIELDRULE_ENVIRONMENT         = var.environment
     METRICS_NAMESPACE              = var.environment
     REDIS_HOST                     = google_redis_instance.main.host
     REDIS_PORT                     = 6379
