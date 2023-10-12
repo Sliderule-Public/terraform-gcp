@@ -104,7 +104,7 @@ resource "helm_release" "sliderule_base" {
   name       = "sliderule-base"
   repository = var.helm_chart_repository
   chart      = "sliderule-base"
-  version    = "0.8.15"
+  version    = "0.8.16"
   namespace  = local.sliderule_namespace
   wait       = false
 
@@ -137,24 +137,17 @@ resource "helm_release" "sliderule" {
   name       = "sliderule-gcp"
   repository = var.helm_chart_repository
   chart      = "sliderule-gcp"
-  version    = "0.5.3"
+  version    = "0.5.4"
   namespace  = local.sliderule_namespace
   wait       = false
 
-  set {
-    name  = "web_url"
-    value = var.web_url
-  }
-
-  set {
-    name  = "api_url"
-    value = var.api_url
-  }
-
-  set {
-    name  = "grpc_url"
-    value = var.grpc_url
-  }
+  values = [
+    templatefile("${path.module}/helm_templates/sliderule_gcp.yaml", {
+      web_url : var.web_url
+      api_url : var.api_url
+      grpc_url : var.grpc_url
+    })
+  ]
 }
 
 resource "kubernetes_secret" "sliderule" {
@@ -169,6 +162,8 @@ resource "kubernetes_secret" "sliderule" {
     POSTGRES_DB                    = "${local.app_name}-${var.environment}-main"
     POSTGRES_HOST                  = module.database.private_ip_address
     POSTGRES_PORT                  = 5432
+    SHIELDRULE_ENVIRONMENT         = var.environment
+    SHIELDRULE_ENVIRONMENT         = var.environment
     SHIELDRULE_ENVIRONMENT         = var.environment
     METRICS_NAMESPACE              = var.environment
     REDIS_HOST                     = google_redis_instance.main.host

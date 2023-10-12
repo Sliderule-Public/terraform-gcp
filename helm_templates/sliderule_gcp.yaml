@@ -1,0 +1,17 @@
+web_url: ${web_url}
+api_url: ${api_url}
+grpc_url: ${grpc_url}
+
+api:
+  ingress:
+    annotations:
+      networking.gke.io/managed-certificates: shieldrule-cert
+      kubernetes.io/ingress.regional-static-ip-name: shieldrule-api
+      kubernetes.io/ingress.class: "gce"
+
+web:
+  ingress:
+    annotations:
+      networking.gke.io/managed-certificates: shieldrule-cert
+      kubernetes.io/ingress.regional-static-ip-name: shieldrule-web
+      kubernetes.io/ingress.class: "gce"
