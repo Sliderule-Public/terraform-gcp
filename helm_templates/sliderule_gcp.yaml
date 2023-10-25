@@ -6,12 +6,12 @@ api:
   ingress:
     annotations:
       networking.gke.io/managed-certificates: shieldrule-cert
-      kubernetes.io/ingress.regional-static-ip-name: shieldrule-api
+      kubernetes.io/ingress.regional-static-ip-name: ${api_static_ip_name}
       kubernetes.io/ingress.class: "gce"
 
 web:
   ingress:
     annotations:
       networking.gke.io/managed-certificates: shieldrule-cert
-      kubernetes.io/ingress.regional-static-ip-name: shieldrule-web
+      kubernetes.io/ingress.regional-static-ip-name: ${web_static_ip_name}
       kubernetes.io/ingress.class: "gce"

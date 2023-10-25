@@ -1,6 +1,9 @@
 module "compute_network" {
-  source      = "./modules/compute_network"
+  count       = var.network_id == "" ? 1 : 0
+  source      = "../src/modules/simple/compute_network"
   app_name    = local.app_name
-  environment = var.environment
+  environment = local.environment
   project_id  = var.project_id
+  vpc_cidr    = var.vpc_cidr
+  region      = var.region
 }

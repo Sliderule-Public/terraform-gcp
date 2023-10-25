@@ -1,14 +1,15 @@
 resource "google_compute_global_address" "web" {
-  name    = "shieldrule-web"
+  name    = "${local.name_prefix}-shieldrule-web"
   project = var.project_id
 }
 
 resource "google_compute_global_address" "api" {
-  name    = "shieldrule-api"
+  name    = "${local.name_prefix}-shieldrule-api"
   project = var.project_id
 }
 
 resource "helm_release" "prerequisites" {
+  count      = var.deploy_helm_prereqs ? 1 : 0
   depends_on = [
     kubernetes_secret.sliderule,
     google_compute_global_address.web,
@@ -21,12 +22,17 @@ resource "helm_release" "prerequisites" {
   repository = var.helm_chart_repository
   chart      = "prerequisites-gcp"
   version    = "0.1.2"
-  namespace  = local.sliderule_namespace
+  namespace  = local.prerequisite_namespace
   wait       = true
 
   set {
     name  = "external-secrets.serviceAccount.create"
     value = "true"
+  }
+
+  set {
+    name  = "external-secrets.serviceAccount.name"
+    value = local.secrets_service_account_name
   }
 
   set {
@@ -36,7 +42,7 @@ resource "helm_release" "prerequisites" {
 
   set {
     name  = "external-secrets.serviceAccount.annotations.iam\\.gke\\.io/gcp-service-account"
-    value = google_service_account.sliderule.email
+    value = google_service_account.sliderule_secrets.email
   }
 }
 
@@ -49,7 +55,7 @@ resource "null_resource" "allow_prerequisites_to_build_crds" {
 resource "time_sleep" "allow_prerequisites_to_build_crds" {
   depends_on = [null_resource.allow_prerequisites_to_build_crds]
 
-  create_duration = "10s"
+  create_duration = "20s"
 }
 
 resource "helm_release" "secrets" {
@@ -57,8 +63,8 @@ resource "helm_release" "secrets" {
   name       = "sliderulesecrets"
   repository = var.helm_chart_repository
   chart      = "sliderule-secrets"
-  version    = "0.3.1"
-  namespace  = local.sliderule_namespace
+  version    = "0.3.2"
+  namespace  = local.prerequisite_namespace
   wait       = true
 
   set {
@@ -73,7 +79,7 @@ resource "helm_release" "secrets" {
 
   set {
     name  = "cluster_name"
-    value = module.gke_cluster.cluster.name
+    value = data.google_container_cluster.sliderule.name
   }
 
   set {
@@ -84,6 +90,16 @@ resource "helm_release" "secrets" {
   set {
     name  = "target_namespace"
     value = local.sliderule_namespace
+  }
+
+  set {
+    name  = "api.secret.name"
+    value = var.api_secret_name
+  }
+
+  set {
+    name  = "web.secret.name"
+    value = var.web_secret_name
   }
 }
 
@@ -104,9 +120,14 @@ resource "helm_release" "sliderule_base" {
   name       = "sliderule-base"
   repository = var.helm_chart_repository
   chart      = "sliderule-base"
-  version    = "0.8.16"
+  version    = "0.8.17"
   namespace  = local.sliderule_namespace
   wait       = false
+
+  set {
+    name  = "force"
+    value = "true"
+  }
 
   values = [
     templatefile("${path.module}/helm_templates/sliderule_base.yaml", {
@@ -116,6 +137,10 @@ resource "helm_release" "sliderule_base" {
       api_image_url : var.api_image_url
       web_image_url : var.web_image_url
       SHIELDRULE_ENVIRONMENT : var.environment
+      web_node_port = lookup(var.service_node_ports, "web")
+      api_node_port = lookup(var.service_node_ports, "api")
+      api_count     = var.api_task_initial_count
+      web_count     = var.web_task_initial_count
     })
   ]
 }
@@ -133,11 +158,13 @@ resource "time_sleep" "allow_base_to_deploy" {
 }
 
 resource "helm_release" "sliderule" {
-  depends_on = [time_sleep.allow_secrets_to_populate]
+  depends_on = [
+    time_sleep.allow_secrets_to_populate, google_compute_global_address.api, google_compute_global_address.web
+  ]
   name       = "sliderule-gcp"
   repository = var.helm_chart_repository
   chart      = "sliderule-gcp"
-  version    = "0.5.4"
+  version    = "0.5.5"
   namespace  = local.sliderule_namespace
   wait       = false
 
@@ -146,6 +173,8 @@ resource "helm_release" "sliderule" {
       web_url : var.web_url
       api_url : var.api_url
       grpc_url : var.grpc_url
+      api_static_ip_name : google_compute_global_address.api.name
+      web_static_ip_name : google_compute_global_address.web.name
     })
   ]
 }
