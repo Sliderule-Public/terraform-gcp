@@ -6,6 +6,9 @@ web_image_url: "${web_image_url}"
 SHIELDRULE_ENVIRONMENT: "${SHIELDRULE_ENVIRONMENT}"
 
 api:
+  count: ${api_count}
+  service:
+    nodePort: ${api_node_port}
   secrets:
     - sliderule-secret
     - terraform-secret
@@ -13,13 +16,16 @@ api:
     - name: "root-cert"
       config_map_name: "gcp-db-cert-info"
       mount_path: "/opt/shieldrule-api/certs"
+      read_only: true
       file_name: "server-ca.pem"
     - name: "client-cert"
       config_map_name: "gcp-db-cert-info"
       mount_path: "/opt/shieldrule-api/certs"
+      read_only: true
       file_name: "client-cert.pem"
     - name: "client-key"
       config_map_name: "gcp-db-cert-info"
+      read_only: true
       mount_path: "/opt/shieldrule-api/certs"
       file_name: "client-key.pk8"
   env_vars:
@@ -28,6 +34,9 @@ api:
     READ_WRITE_SSL_CLIENT_KEY: "/opt/shieldrule-api/certs/client-key.pk8/client-key.pk8"
 
 web:
+  count: ${web_count}
+  service:
+    nodePort: ${web_node_port}
   secrets:
     - sliderule-web-secret
     - terraform-secret

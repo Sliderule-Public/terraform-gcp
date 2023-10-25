@@ -1,6 +1,6 @@
 resource "google_service_account" "sliderule" {
   project      = var.project_id
-  account_id   = "sliderule-sa"
+  account_id   = local.service_account_name
   display_name = local.service_account_name
 }
 

@@ -1,13 +1,13 @@
 resource "google_redis_instance" "main" {
   project        = var.project_id
-  name           = local.app_name
+  name           = "${local.name_prefix}-${local.app_name}"
   tier           = "STANDARD_HA"
   memory_size_gb = 10
 
   location_id             = "${var.region}-a"
   alternative_location_id = "${var.region}-b"
 
-  authorized_network = module.compute_network.network_id
+  authorized_network = local.network_id
 
   redis_version = "REDIS_6_X"
   display_name  = local.app_name

@@ -14,6 +14,7 @@ resource "google_sql_database_instance" "instance" {
   database_version = var.db_version
   project          = var.project_id
   region           = var.region
+
   settings {
     tier = var.db_tier
 
@@ -21,14 +22,13 @@ resource "google_sql_database_instance" "instance" {
       ipv4_enabled    = true
       private_network = var.network_id
       require_ssl     = true
-      authorized_networks {
-        name  = "vpn"
-        value = "50.18.13.74/32"
-      }
 
-      authorized_networks {
-        name  = "matt"
-        value = "96.8.253.207/32"
+      dynamic "authorized_networks" {
+        for_each = var.db_authorized_networks
+        content {
+          name  = authorized_networks.value.name
+          value = authorized_networks.value.value
+        }
       }
     }
   }
@@ -37,9 +37,10 @@ resource "google_sql_database_instance" "instance" {
 }
 
 resource "google_compute_global_address" "private_ip_address" {
+  count    = var.create_private_services_connection ? 1 : 0
   provider = google-beta
 
-  name          = "private-ip-address"
+  name          = "${local.name_prefix}-private-ip-address"
   purpose       = "VPC_PEERING"
   address_type  = "INTERNAL"
   prefix_length = 16
@@ -48,16 +49,17 @@ resource "google_compute_global_address" "private_ip_address" {
 }
 
 resource "google_service_networking_connection" "private_vpc_connection" {
+  count    = var.create_private_services_connection ? 1 : 0
   provider = google-beta
 
   network                 = var.network_id
   service                 = "servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address[0].name]
 }
 
 
 data "google_secret_manager_secret_version" "sliderule" {
-  secret  = "sliderule_secret"
+  secret  = var.api_secret_name
   project = var.project_id
 }
 
@@ -77,24 +79,3 @@ resource "google_sql_ssl_cert" "client_cert" {
   instance    = google_sql_database_instance.instance.name
   project     = var.project_id
 }
-
-#resource "google_compute_global_address" "public_ip_address" {
-#  provider = google-beta
-#
-#  name          = "private-ip-address"
-#  purpose       = "VPC_PEERING"
-#  address_type  = "EXTERNAL"
-#  prefix_length = 16
-#  project       = var.project_id
-#  network       = var.network_id
-#}
-#
-#// TODO this will take some kind of input from Cloud Run
-#resource "google_service_networking_connection" "public_vpc_connection" {
-#  provider = google-beta
-#
-#  network                 = var.network_id
-#  service                 = "servicenetworking.googleapis.com"
-#  reserved_peering_ranges = [google_compute_global_address.public_ip_address.name]
-#}
-

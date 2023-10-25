@@ -7,3 +7,11 @@ variable "app_name" {
 variable "project_id" {
   type = string
 }
+variable "vpc_cidr" {
+  description = "The CIDR of the VPC to deploy to"
+  type        = string
+}
+variable "region" {
+  description = "The region to deploy to"
+  type        = string
+}
