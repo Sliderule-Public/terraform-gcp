@@ -6,6 +6,13 @@ web_image_url: "${web_image_url}"
 SHIELDRULE_ENVIRONMENT: "${SHIELDRULE_ENVIRONMENT}"
 
 api:
+  resources:
+    requests:
+      memory: "4000Mi"
+      cpu: "900m"
+    limits:
+      memory: "4000Mi"
+      cpu: "900m"
   count: ${api_count}
   service:
     nodePort: ${api_node_port}

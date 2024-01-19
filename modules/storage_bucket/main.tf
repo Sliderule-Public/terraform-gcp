@@ -8,7 +8,7 @@ resource "google_storage_bucket" "bucket" {
   location                    = "US"
   project                     = var.project_id
   cors {
-    origin          = ["http://${var.web_url}"]
+    origin          = ["*"]
     method          = ["GET", "HEAD", "PUT", "POST", "DELETE"]
     response_header = ["*"]
     max_age_seconds = 3600
