@@ -122,3 +122,8 @@ variable create_private_services_connection {
   type        = bool
   default     = false
 }
+
+variable "jaeger_url" {
+  description = "The desired URL for Jaeger"
+  type        = string
+}

@@ -8,12 +8,18 @@ resource "google_compute_global_address" "api" {
   project = var.project_id
 }
 
+resource "google_compute_global_address" "jaeger" {
+  name    = "${local.name_prefix}-shieldrule-jaeger"
+  project = var.project_id
+}
+
 resource "helm_release" "prerequisites" {
   count      = var.deploy_helm_prereqs ? 1 : 0
   depends_on = [
     kubernetes_secret.sliderule,
     google_compute_global_address.web,
     google_compute_global_address.api,
+    google_compute_global_address.jaeger,
     module.gke_cluster,
     kubernetes_namespace.sliderule,
     kubernetes_namespace.sliderule_prerequisites,
@@ -159,12 +165,13 @@ resource "time_sleep" "allow_base_to_deploy" {
 
 resource "helm_release" "sliderule" {
   depends_on = [
-    time_sleep.allow_secrets_to_populate, google_compute_global_address.api, google_compute_global_address.web
+    time_sleep.allow_secrets_to_populate, google_compute_global_address.api, google_compute_global_address.web,
+    google_compute_global_address.jaeger
   ]
   name       = "sliderule-gcp"
   repository = var.helm_chart_repository
   chart      = "sliderule-gcp"
-  version    = "0.5.5"
+  version    = "0.6.2"
   namespace  = local.sliderule_namespace
   wait       = false
 
@@ -173,8 +180,10 @@ resource "helm_release" "sliderule" {
       web_url : var.web_url
       api_url : var.api_url
       grpc_url : var.grpc_url
+      jaeger_url : var.jaeger_url
       api_static_ip_name : google_compute_global_address.api.name
       web_static_ip_name : google_compute_global_address.web.name
+      jaeger_static_ip_name : google_compute_global_address.jaeger.name
     })
   ]
 }

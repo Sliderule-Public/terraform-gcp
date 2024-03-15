@@ -15,3 +15,12 @@ web:
       networking.gke.io/managed-certificates: shieldrule-cert
       kubernetes.io/ingress.regional-static-ip-name: ${web_static_ip_name}
       kubernetes.io/ingress.class: "gce"
+
+jaeger:
+  ingress:
+    annotations:
+      networking.gke.io/managed-certificates: shieldrule-cert
+      kubernetes.io/ingress.regional-static-ip-name: ${jaeger_static_ip_name}
+      kubernetes.io/ingress.class: "gce"
+  enabled: true
+  url: ${jaeger_url}
