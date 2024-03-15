@@ -48,3 +48,6 @@ web:
     - sliderule-web-secret
     - terraform-secret
 
+
+jaeger:
+  enabled: true

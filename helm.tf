@@ -126,7 +126,7 @@ resource "helm_release" "sliderule_base" {
   name       = "sliderule-base"
   repository = var.helm_chart_repository
   chart      = "sliderule-base"
-  version    = "0.8.17"
+  version    = "0.9.0"
   namespace  = local.sliderule_namespace
   wait       = false
 
